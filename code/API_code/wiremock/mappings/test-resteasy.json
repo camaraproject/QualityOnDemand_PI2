@@ -1,0 +1,30 @@
+{
+  "mappings": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "/subscriptions/1"
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "bodyFileName": "token.json"
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "/apigm/subscriptions/1"
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "bodyFileName": "apigm-createSession.json"
+      }
+    }
+  ]
+}

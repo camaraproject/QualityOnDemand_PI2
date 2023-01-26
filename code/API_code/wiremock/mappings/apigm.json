@@ -1,0 +1,66 @@
+{
+  "mappings": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "/notifications"
+      },
+      "response": {
+        "status": 200
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "/apigm/subscriptions/1"
+      },
+      "response": {
+        "status": 201,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "bodyFileName": "apigm-createSession.json"
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
+        "url": "/apigm/subscriptions"
+      },
+      "response": {
+        "status": 201,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "bodyFileName": "apigm-createSession.json"
+      }
+    },
+    {
+      "request": {
+        "method": "DELETE",
+        "url": "/apigm/subscriptions/existing_id"
+      },
+      "response": {
+        "status": 204
+      }
+    },
+    {
+      "request": {
+        "method": "DELETE",
+        "url": "/apigm/subscriptions/non_existing_id"
+      },
+      "response": {
+        "status": 404
+      }
+    },
+    {
+      "request": {
+        "method": "DELETE",
+        "urlPathPattern": "/apigm/subscriptions/[a-z0-9A-Z]*"
+      },
+      "response": {
+        "status": 204
+      }
+    }
+  ]
+}

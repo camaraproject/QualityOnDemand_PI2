@@ -1,0 +1,24 @@
+{
+  "type": "Parameter(s) Illegal",
+  "title": "error code 1003: argument not valid",
+  "status": 400,
+  "detail": "Request parameter(s) invalid",
+  "invalidParams": [
+    {
+      "param": "expirationTime",
+      "reason": "Field expirationTime<300> format is invalid"
+    },
+    {
+      "param": "expirationTime",
+      "reason": "Field expirationTime<300> format is invalid"
+    },
+    {
+      "param": "ueIpv4Addr,ueIpv6Addr",
+      "reason": "One of ueIpv4Addr,ueIpv6Addr can not be empty"
+    },
+    {
+      "param": "flowId",
+      "reason": "This flowId<0> is not included in [1]"
+    }
+  ]
+}

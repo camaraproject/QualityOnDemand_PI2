@@ -1,0 +1,990 @@
+openapi: 3.0.0
+info:
+  description: |
+    This is the specification of AS Session with QoS 3GPP T8 API.
+
+    # Introduction
+
+    The AS Session with QoS 3GPP T8 API allows the SCS/AS to
+    request the network to provide specific QoS for an AS session. A callback API is embedded to
+    support Ericsson SCEF sending events received from PCRF to SCS/AS.
+    It provides interfaces through which SCS/AS manages QoS Policy subscriptions.
+
+
+    # Get Started
+
+    The AS Session with QoS 3GPP T8 API allows SCS/AS to send QoS request to create, query, update, or delete QoS subscriptions in 3GPP networks.
+
+    The AS Session with QoS 3GPP T8 API follows the design principles of 3GPP TS 29.122 V15.4.0.
+
+    # Use Cases
+
+    AS Session with QoS 3GPP T8 API supports the following operations:
+
+    * Create a QoS Subscription
+    * Get a QoS Subscription
+    * Replace a QoS Subscription
+    * Update a QoS Subscription
+    * Delete a QoS Subscription
+    * Notify QoS
+
+    # Compatibility
+    In order to secure API forward compatibility, API clients must follow the design rules as described in "Forward Compatibility Requirement to API Client" chapter of Northbound Interface Description CPI document.
+  title: 'AS Session with QoS 3GPP T8 API '
+  version: 1.0.6.3
+  x-api-id: 2b84d812-6056-4552-81a3-25a69bc1ec30
+externalDocs:
+  description: 3GPP TS 29.122 V15.4.0 T8 reference point for Northbound APIs
+  url: "http://www.3gpp.org/ftp/Specs/archive/29_series/29.122/"
+security:
+  - { }
+  - oAuth2ClientCredentials: [ ]
+servers:
+  - url: "{apiRoot}/3gpp-as-session-with-qos/v1"
+    variables:
+      apiRoot:
+        default: https://example.com
+        description: apiRoot as defined in subclause 5.2.4 of 3GPP TS 29.122.
+paths:
+  /{scsAsId}/subscriptions:
+    post:
+      summary: Create a QoS subscription.
+      description: Creates a QoS subscription for a given SCS/AS. The SCS/AS initiates the HTTP POST request message and the SCEF responds to the message.
+      tags:
+        - Create a QoS subscription
+      parameters:
+        - name: scsAsId
+          in: path
+          description: |
+            Specifies the identifier of the SCS/AS. The SCS/AS ID is provisioned
+            to Ericsson SCEF through the Generic Provisioning Interface, Web
+            Console, or Developer Portal. For how the SCS/AS ID is created,
+            refer to *Generic Provisioning Interface*, *Getting Started with
+            Service Capability Exposure Function*, or *Ericsson Developer
+            Tutorial for SCEF* in the CPI library.
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: Specifies the parameters in the request to create a QoS subscription.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AsSessionWithQoSSubscription'
+            example:
+              "supportedFeatures": "0"
+              "notificationDestination": "http://localhost:10012/AsSCS/notify"
+              "flowInfo":
+                - "flowId": 11
+                  "flowDescriptions":
+                    - "permit in 17 from 10.175.188.24 1234 to 10.175.188.23 4321"
+              "qosReference": "e8035720-ec1c-4946-8a00-77b658116619"
+              "ueIpv4Addr": "10.175.188.24"
+              "ueIpv6Addr": "2001:0db8:0000:b:111:b8:0000:001a"
+              "imsi": "460001357924680"
+              "msisdn": "12345678901"
+              "externalId": "example@ericsson.com"
+              "usageThreshold":
+                "duration": 3000
+                "totalVolume": 1000
+                "downlinkVolume": 500
+                "uplinkVolume": 500
+              "sponsorInfo":
+                "sponsorId": Disney
+                "aspId": app@Bat
+              "expirationTime": "2019-11-21T15:42:11+08:00"
+              "extensions": "{\"Example-Indicator\":\"ExampleIndicatorValue\"}"
+      responses:
+        "201":
+          description: Created (Successful creation of subscription)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AsSessionWithQoSSubscription'
+              example:
+                "self": "http://localhost:27080/3gpp-as-session-with-qos/v1/app1/subscriptions/MTI3LjAuMC4xOy0xNTA5ODQ4NDc4OzE7ZGMxO1NDRUZfUU9TOzA="
+                "supportedFeatures": "0"
+                "notificationDestination": "http://localhost:10012/AsSCS/notify"
+                "flowInfo":
+                  - "flowId": 11
+                    "flowDescriptions":
+                      - "permit in 17 from 10.175.188.24 1234 to 10.175.188.23 4321"
+                "qosReference": "e8035720-ec1c-4946-8a00-77b658116619"
+                "ueIpv4Addr": "10.175.188.24"
+                "ueIpv6Addr": "2001:0db8:0000:b:111:b8:0000:001a"
+                "imsi": "460001357924680"
+                "msisdn": "12345678901"
+                "externalId": "example@ericsson.com"
+                "usageThreshold":
+                  "duration": 3000
+                  "totalVolume": 1000
+                  "downlinkVolume": 500
+                  "uplinkVolume": 500
+                "sponsorInfo":
+                  "sponsorId": "Disney"
+                  "aspId": "app@Bat"
+                "expirationTime": "2019-11-21T15:42:11+08:00"
+                "extensions": "{\"Example-Indicator\":\"ExampleIndicatorValue\"}"
+                "status": "accepted"
+          headers:
+            Location:
+              description: "Contains the URI of the newly created subscription"
+              required: true
+              schema:
+                type: string
+        "400":
+          description: Bad request, invalid parameters are in request
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails__TS29122_CommonData'
+              example:
+                "type": "Parameter(s) Illegal"
+                "title": "error code 1003: argument not valid"
+                "status": 400
+                "detail": "Request parameter check failed"
+                "invalidParams":
+                  - "param": "notificationDestination"
+                    "reason": "Field notificationDestination<wrongDest> is not correct"
+                  - "param": "sourceIpAddrInFlowDescriptions"
+                    "reason": "Field sourceIpAddrInFlowDescriptions<permit in 17 from fromIp  to 1.2.3.4 1234> is not correct"
+        "401":
+          $ref: '#/components/responses/401__TS29122_CommonData'
+        "403":
+          $ref: '#/components/responses/403__TS29122_CommonData'
+        "404":
+          $ref: '#/components/responses/404__TS29122_CommonData'
+        "411":
+          $ref: '#/components/responses/411__TS29122_CommonData'
+        "413":
+          $ref: '#/components/responses/413__TS29122_CommonData'
+        "415":
+          $ref: '#/components/responses/415__TS29122_CommonData'
+        "429":
+          $ref: '#/components/responses/429__TS29122_CommonData'
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails__TS29122_CommonData'
+              example:
+                "type": "Business Exception"
+                "title": "error code 2010: business failed"
+                "status": 500
+                "detail": "Un-supported features"
+        "503":
+          $ref: '#/components/responses/503__TS29122_CommonData'
+        default:
+          $ref: '#/components/responses/default__TS29122_CommonData'
+  /{scsAsId}/subscriptions/{subscriptionId}:
+    get:
+      summary: Get a QoS Subscription resource.
+      description: Returns an active QoS subscription to the SCS/AS. The SCS/AS initiates the HTTP GET request message and the SCEF responds to the message.
+      tags:
+        - Get a QoS Subscription resource
+      parameters:
+        - name: scsAsId
+          in: path
+          description: |
+            Specifies the identifier of the SCS/AS. The SCS/AS ID is provisioned
+            to Ericsson SCEF through the Generic Provisioning Interface, Web
+            Console, or Developer Portal. For how the SCS/AS ID is created,
+            refer to *Generic Provisioning Interface*, *Getting Started with
+            Service Capability Exposure Function*, or *Ericsson Developer
+            Tutorial for SCEF* in the CPI library.
+          required: true
+          schema:
+            type: string
+        - name: subscriptionId
+          in: path
+          description: |
+            Specifies the identifier of the individual subscription resource in
+            SCEF. A subscription ID is generated by SCEF when SCS/AS initiates a
+            POST request to create a QoS Policy subscription. It is
+            included in the value of the *self* parameter, which is a response
+            parameter to SCS/AS. Normally the *self* is a URL, and subscription
+            ID is the last field of the URL.
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK (Successfully get the active subscription)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AsSessionWithQoSSubscription'
+              example:
+                "self": "http://127.0.0.1:27080/3gpp-as-session-with-qos/v1/app_test/subscriptions/MTI3LjAuMC4xOy0xNTA5ODQ4NDc4OzE7ZGMxO1NDRUZfUU9TOzA="
+                "supportedFeatures": "0"
+                "notificationDestination": "http://127.0.0.1:10012/AsSCS/notify"
+                "flowInfo":
+                  - "flowId": 1
+                    "flowDescriptions":
+                      - "permit in 17 from 10.175.188.12 1234 to 10.175.188.11 4321"
+                  - "flowId": 2
+                    "flowDescriptions":
+                      - "permit out 6 from 10.175.188.11 4321 to 10.175.188.12 1234"
+                  - "flowId": 3
+                    "flowDescriptions":
+                      - "permit in 6 from 10.175.188.12 1234 to 10.175.188.33 4321"
+                      - "permit out 17 from 10.175.188.33 4321 to 10.175.188.12 1234"
+                "qosReference": "multi"
+                "ueIpv4Addr": "10.175.188.12"
+                "ueIpv6Addr": "2001:0db8:0000:b:111:b8:0000:001a"
+                "imsi": "460001357924680"
+                "msisdn": "12345678901"
+                "externalId": "example@ericsson.com"
+                "usageThreshold":
+                  "duration": 3000
+                  "totalVolume": 1000000
+                  "downlinkVolume": 500
+                  "uplinkVolume": 50000
+                "sponsorInfo":
+                  "sponsorId": "Disney"
+                  "aspId": "app@Bat"
+                "expirationTime": "2019-11-21T15:40:23+08:00"
+                "status": "active"
+        "400":
+          $ref: '#/components/responses/400__TS29122_CommonData'
+        "401":
+          $ref: '#/components/responses/401__TS29122_CommonData'
+        "403":
+          $ref: '#/components/responses/403__TS29122_CommonData'
+        "404":
+          $ref: '#/components/responses/404__TS29122_CommonData'
+        "406":
+          $ref: '#/components/responses/406__TS29122_CommonData'
+        "429":
+          $ref: '#/components/responses/429__TS29122_CommonData'
+        "500":
+          $ref: '#/components/responses/500__TS29122_CommonData'
+        "503":
+          $ref: '#/components/responses/503__TS29122_CommonData'
+        default:
+          $ref: '#/components/responses/default__TS29122_CommonData'
+    put:
+      summary: Replace an existing subscription resource.
+      description: Replaces an existing QoS subscription in SCEF. The SCS/AS initiates the HTTP PUT request message and the SCEF responds to the message.
+      tags:
+        - Replace an existing subscription resource
+      parameters:
+        - name: scsAsId
+          in: path
+          description: |
+            Specifies the identifier of the SCS/AS. The SCS/AS ID is provisioned
+            to Ericsson SCEF through the Generic Provisioning Interface, Web
+            Console, or Developer Portal. For how the SCS/AS ID is created,
+            refer to *Generic Provisioning Interface*, *Getting Started with
+            Service Capability Exposure Function*, or *Ericsson Developer
+            Tutorial for SCEF* in the CPI library.
+          required: true
+          schema:
+            type: string
+        - name: subscriptionId
+          in: path
+          description: |
+            Specifies the identifier of the individual subscription resource in
+            SCEF. A subscription ID is generated by SCEF when SCS/AS initiates a
+            POST request to create a QoS Policy subscription. It is
+            included in the value of the *self* parameter, which is a response
+            parameter to SCS/AS. Normally the *self* is a URL, and subscription
+            ID is the last field of the URL.
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: Parameters for updating the existing subscription
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AsSessionWithQoSSubscription'
+            example:
+              "supportedFeatures": "0"
+              "notificationDestination": "http://localhost:10012/AsSCS/notify"
+              "flowInfo":
+                - "flowId": 1
+                  "flowDescriptions":
+                    - "permit in 17 from 10.175.188.25 1234 to 10.175.188.26 4321"
+              "qosReference": "e8035720-ec1c-4946-8a00-77b658116618"
+              "ueIpv4Addr": "10.175.188.25"
+              "ueIpv6Addr": "2001:0db8:0000:b:111:b8:0000:001a"
+              "imsi": "460001357924680"
+              "msisdn": "12345678903"
+              "externalId": "example@ericsson.com"
+              "usageThreshold":
+                "duration": 4000
+                "totalVolume": 1200
+                "downlinkVolume": 600
+                "uplinkVolume": 600
+              "sponsorInfo":
+                "sponsorId": "Disney"
+                "aspId": "app@Bat"
+              "expirationTime": "2019-11-21T15:50:54+08:00"
+              "extensions": "{\"Example-Indicator\":\"ExampleIndicatorValue\"}"
+      responses:
+        "200":
+          description: OK (Successful update of the subscription)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AsSessionWithQoSSubscription'
+              example:
+                "self": "http://127.0.0.1:27080/3gpp-as-session-with-qos/v1/app1/subscriptions/MTI3LjAuMC4xOy0xNTA5ODQ4NDc4OzE7ZGMxO1NDRUZfUU9TOzA="
+                "supportedFeatures": "0"
+                "notificationDestination": "http://localhost:10012/AsSCS/notify"
+                "flowInfo":
+                  - "flowId": 1
+                    "flowDescriptions":
+                      - "permit in 17 from 10.175.188.25 1234 to 10.175.188.26 4321"
+                "qosReference": "e8035720-ec1c-4946-8a00-77b658116618"
+                "ueIpv4Addr": "10.175.188.25"
+                "ueIpv6Addr": "2001:0db8:0000:b:111:b8:0000:001a"
+                "imsi": "460001357924680"
+                "msisdn": "12345678903"
+                "externalId": "example@ericsson.com"
+                "usageThreshold":
+                  "duration": 4000
+                  "totalVolume": 1200
+                  "downlinkVolume": 600
+                  "uplinkVolume": 600
+                "sponsorInfo":
+                  "sponsorId": "Disney"
+                  "aspId": "app@Bat"
+                "expirationTime": "2019-11-21T15:50:54+08:00"
+                "extensions": "{\"Example-Indicator\":\"ExampleIndicatorValue\"}"
+                "status": "accepted"
+        "400":
+          $ref: '#/components/responses/400__TS29122_CommonData'
+        "401":
+          $ref: '#/components/responses/401__TS29122_CommonData'
+        "403":
+          $ref: '#/components/responses/403__TS29122_CommonData'
+        "404":
+          $ref: '#/components/responses/404__TS29122_CommonData'
+        "411":
+          $ref: '#/components/responses/411__TS29122_CommonData'
+        "413":
+          $ref: '#/components/responses/413__TS29122_CommonData'
+        "415":
+          $ref: '#/components/responses/415__TS29122_CommonData'
+        "429":
+          $ref: '#/components/responses/429__TS29122_CommonData'
+        "500":
+          $ref: '#/components/responses/500__TS29122_CommonData'
+        "503":
+          $ref: '#/components/responses/503__TS29122_CommonData'
+        default:
+          $ref: '#/components/responses/default__TS29122_CommonData'
+    patch:
+      summary: Update an existing subscription resource.
+      description: :| Updates properties of an existing QoS policy subscription in SCEF. The SCS/AS initiates the HTTP PATCH request message and the SCEF responds to the message.
+      tags:
+        - Update an existing subscription resource
+      parameters:
+        - name: scsAsId
+          in: path
+          description: |
+            Specifies the identifier of the SCS/AS. The SCS/AS ID is provisioned
+            to Ericsson SCEF through the Generic Provisioning Interface, Web
+            Console, or Developer Portal. For how the SCS/AS ID is created,
+            refer to *Generic Provisioning Interface*, *Getting Started with
+            Service Capability Exposure Function*, or *Ericsson Developer
+            Tutorial for SCEF* in the CPI library.
+          required: true
+          schema:
+            type: string
+        - name: subscriptionId
+          in: path
+          description: |
+            Specifies the identifier of the individual subscription resource in
+            SCEF. A subscription ID is generated by SCEF when SCS/AS initiates a
+            POST request to create a QoS Policy subscription. It is
+            included in the value of the *self* parameter, which is a response
+            parameter to SCS/AS. Normally the *self* is a URL, and subscription
+            ID is the last field of the URL.
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/merge-patch+json:
+            schema:
+              $ref: '#/components/schemas/AsSessionWithQoSSubscriptionPatch'
+            example:
+              "flowInfo":
+                - "flowId": 11
+                  "flowDescriptions":
+                    - "permit in 17 from 10.175.188.24 1243 to 10.175.188.23 4312"
+              "qosReference": "e8035720-ec1c-4946-8a00-77b658116618"
+              "usageThreshold":
+                "duration": 2000
+                "totalVolume": 100
+                "downlinkVolume": 100
+                "uplinkVolume": 666
+      responses:
+        "200":
+          description: OK. The subscription was modified successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AsSessionWithQoSSubscription'
+              example:
+                "self": "http://127.0.0.1:27080/3gpp-as-session-with-qos/v1/app1/subscriptions/MTI3LjAuMC4xOy0xNTA5ODQ4NDc4OzE7ZGMxO1NDRUZfUU9TOzA="
+                "supportedFeatures": "0"
+                "notificationDestination": "http://10.175.188.23:10012/AsSCS/notify"
+                "flowInfo":
+                  - "flowId": 11
+                    "flowDescriptions":
+                      - "permit in 17 from 10.175.188.24 1243 to 10.175.188.23 4312"
+                "qosReference": "e8035720-ec1c-4946-8a00-77b658116618"
+                "ueIpv4Addr": "10.175.188.24"
+                "ueIpv6Addr": "2001:0db8:0000:b:111:b8:0000:001a"
+                "imsi": "460001357924680"
+                "msisdn": "12345678901"
+                "usageThreshold":
+                  "duration": 2000
+                  "totalVolume": 100
+                  "downlinkVolume": 100
+                  "uplinkVolume": 666
+                "sponsorInfo":
+                  "sponsorId": "Disney"
+                  "aspId": "app@Bat"
+                "status": "accepted"
+        "400":
+          $ref: '#/components/responses/400__TS29122_CommonData'
+        "401":
+          $ref: '#/components/responses/401__TS29122_CommonData'
+        "403":
+          $ref: '#/components/responses/403__TS29122_CommonData'
+        "404":
+          $ref: '#/components/responses/404__TS29122_CommonData'
+        "411":
+          $ref: '#/components/responses/411__TS29122_CommonData'
+        "413":
+          $ref: '#/components/responses/413__TS29122_CommonData'
+        "415":
+          $ref: '#/components/responses/415__TS29122_CommonData'
+        "429":
+          $ref: '#/components/responses/429__TS29122_CommonData'
+        "500":
+          $ref: '#/components/responses/500__TS29122_CommonData'
+        "503":
+          $ref: '#/components/responses/503__TS29122_CommonData'
+        default:
+          $ref: '#/components/responses/default__TS29122_CommonData'
+    delete:
+      summary: Delete an existing subscription resource.
+      description: |
+        Removes a specific QoS policy subscription from the SCEF. The
+        SCS/AS initiates the HTTP DELETE request message and the SCEF responds
+        to the message.
+      tags:
+        - Delete an existing subscription resource
+      parameters:
+        - name: scsAsId
+          in: path
+          description: |
+            Specifies the identifier of the SCS/AS. The SCS/AS ID is provisioned
+            to Ericsson SCEF through the Generic Provisioning Interface, Web
+            Console, or Developer Portal. For how the SCS/AS ID is created,
+            refer to *Generic Provisioning Interface*, *Getting Started with
+            Service Capability Exposure Function*, or *Ericsson Developer
+            Tutorial for SCEF* in the CPI library.
+          required: true
+          schema:
+            type: string
+        - name: subscriptionId
+          in: path
+          description: |
+            Specifies the identifier of the individual subscription resource in
+            SCEF. A subscription ID is generated by SCEF when SCS/AS initiates a
+            POST request to create a QoS Policy subscription. It is
+            included in the value of the *self* parameter, which is a response
+            parameter to SCS/AS. Normally the *self* is a URL, and subscription
+            ID is the last field of the URL.
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: No Content (Successful deletion of the existing subscription)
+        "400":
+          $ref: '#/components/responses/400__TS29122_CommonData'
+        "401":
+          $ref: '#/components/responses/401__TS29122_CommonData'
+        "403":
+          $ref: '#/components/responses/403__TS29122_CommonData'
+        "404":
+          $ref: '#/components/responses/404__TS29122_CommonData'
+        "429":
+          $ref: '#/components/responses/429__TS29122_CommonData'
+        "500":
+          $ref: '#/components/responses/500__TS29122_CommonData'
+        "503":
+          $ref: '#/components/responses/503__TS29122_CommonData'
+        default:
+          $ref: '#/components/responses/default__TS29122_CommonData'
+  /{callbackUrlforNotification}:
+    post:
+      summary: Notify QoS
+      description: Sends a QoS notification to SCS/AS. The SCEF initiates the HTTP POST request message and the SCS/AS responds to the message.
+      tags:
+        - Notify QoS
+      parameters:
+        - name: callbackUrlforNotification
+          in: path
+          description: |
+            The callback URL is defined by SCS/AS in the POST request parameter *notificationDestination* for creating configuration.
+          required: true
+          schema:
+            $ref: '#/components/schemas/Uri__TS29122_CommonData'
+      requestBody:
+        description: |
+          A JSON object that contains the QoS notification.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NotificationData'
+            example:
+              "transaction": "http://127.0.0.1:27080/3gpp-as-session-with-qos/v1/app_notify1/subscriptions/MTI3LjAuMC4xOy0xNTA5ODQ4NDc4OzE7ZGMxO1NDRUZfUU9TOzA="
+              "eventReports":
+                - "event": "RECOVERY_OF_BEARER"
+                  "flowIds":
+                    - 1
+                - "event": "USAGE_REPORT"
+                  "accumulatedUsage":
+                    "duration": 100
+                    "totalVolume": 3000
+                    "downlinkVolume": 100
+                    "uplinkVolume": 2900
+      responses:
+        "204":
+          description: No Content (successful notification)
+        "400":
+          $ref: '#/components/responses/400__TS29122_CommonData'
+        "401":
+          $ref: '#/components/responses/401__TS29122_CommonData'
+        "403":
+          $ref: '#/components/responses/403__TS29122_CommonData'
+        "404":
+          $ref: '#/components/responses/404__TS29122_CommonData'
+        "411":
+          $ref: '#/components/responses/411__TS29122_CommonData'
+        "413":
+          $ref: '#/components/responses/413__TS29122_CommonData'
+        "415":
+          $ref: '#/components/responses/415__TS29122_CommonData'
+        "429":
+          $ref: '#/components/responses/429__TS29122_CommonData'
+        "500":
+          $ref: '#/components/responses/500__TS29122_CommonData'
+        "503":
+          $ref: '#/components/responses/503__TS29122_CommonData'
+        default:
+          $ref: '#/components/responses/default__TS29122_CommonData'
+components:
+  securitySchemes:
+    oAuth2ClientCredentials:
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: "{tokenUrl}"
+          scopes: { }
+  schemas:
+    AsSessionWithQoSSubscription:
+      type: object
+      properties:
+        self:
+          type: string
+          description: |
+            Specifies the link to the QoS policy subscription resource. This
+            parameter is supplied by the SCEF in the HTTP POST response when a
+            QoS policy subscription is created successfully. Normally, the
+            format of this parameter is
+            <qos_policy_api_root>/3gpp-as-session-with-qos/v1/<scsAsId>/subscriptions/<subscriptionId>.
+            Where, the *qos_policy_api_root* is configured via Configuration
+            Manager. For more information, refer to the CPI guide *Getting Started
+            with Service Capability Exposure Function*. The *scsAsId* is the
+            identifier of the SCS/AS. See parameter *scsAsId* for more details.
+            The *subscriptionId* is generated by SCEF to
+            identify the individual subscription resource. See parameter
+            *subscriptionId* for more details.
+          example: "https://example.com/3gpp-as-session-with-qos/v1/scsAsId/subscriptions/MTI3LjAuMC4xOy0xNTA5ODQ4NDc4OzE7ZGMxO1NDRUZfUU9TOzA="
+        supportedFeatures:
+          type: string
+          description: |
+            A string indicates the features supported by this API operation. In
+            the POST request, this string is the features requested by SCS/AS. In
+            the response, this string is the intersection of the SCS/AS requested
+            features and of SCEF applicable features (defined in 3GPP TS 29.122).
+            The string contains a bitmask indicating supported features
+            in hexadecimal representation. Each character in the string takes a
+            value of "0" to "9" or "A" to "F". The character representing the
+            highest-numbered feature appears first in the string, and the
+            character representing the lowest-numbered feature appears last. For
+            example, the string "E" means features 2, 3, 4 are supported. For more
+            description, refer to Table 5.2.2-3 in 3GPP TS 29.571.
+          pattern: "^[A-Fa-f0-9]*$"
+        notificationDestination:
+          type: string
+          description: |
+            Specifies the destination to which the notification of QoS Event subscription
+            for an AS session is sent. Normally it is a URL.
+          example: "https://notify.com"
+        flowInfo:
+          type: array
+          items:
+            $ref: '#/components/schemas/FlowInfo'
+          minItems: 0
+          description: Describes the data flow which requires QoS.
+        qosReference:
+          type: string
+          description: Identifies a pre-defined QoS information.
+          example: "gameReferenceI"
+        ueIpv4Addr:
+          type: string
+          description: Indicates the Ipv4 address of the UE which is formatted in the dotted decimal notation as defined in IETF RFC 1166. At least one of ueIpv4Addr or ueIpv6Addr needs to be provided.
+          example: "10.175.188.23"
+        ueIpv6Addr:
+          type: string
+          description: Indicates the Ipv6 address of the UE which is formatted according to clause 4 in IETF RFC 5952. At least one of ueIpv4Addr or ueIpv6Addr needs to be provided.
+          example: "2001:0db8:0000:b:111:b8:0000:001a"
+        imsi:
+          type: string
+          description: imsi number  that uniquely identifies every user of a cellular network
+          example: "460001357924680"
+          pattern: "^[0-9]{5,15}$"
+        msisdn:
+          type: string
+          description: |
+            Identifies the MS internal PSTN/ISDN number allocated for a UE. This
+            parameter is mutually exclusive with the *externalId* parameter in a
+            request body.
+          example: "12345678901"
+        externalId:
+          type: string
+          description: |
+            Uniquely identifies a user as defined in 3GPP TS 23.682. The external
+            identifier which is stored in the HSS contains a local identifier
+            followed by "@" and a domain identifier.
+          example: "example@ericsson.com"
+        usageThreshold:
+          $ref: '#/components/schemas/UsageThreshold__TS29122_CommonData'
+        sponsorInfo:
+          $ref: '#/components/schemas/SponsorInformation__TS29122_CommonData'
+        status:
+          type: string
+          description: |
+            Indicates the current status of a Rx Session. Possible values are
+             - accepted: Indicates that the Rx session binding is created.
+             - active : Indicates that Rx session resource allocation is successful.
+             - resource_alloc_failure : Indicates that Rx session resource allocation is failed.
+             - loss: Indicates that Rx session is loss of bearer.
+             - released: Indicates that Rx session is a release of a bearer.
+          example: active
+        expirationTime:
+          $ref: '#/components/schemas/ExpirationTime'
+        extensions:
+          $ref: '#/components/schemas/Extensions'
+      required:
+        - notificationDestination
+    AsSessionWithQoSSubscriptionPatch:
+      type: object
+      properties:
+        flowInfo:
+          type: array
+          items:
+            $ref: '#/components/schemas/FlowInfo'
+          minItems: 0
+          description: Describes the data flow which requires QoS.
+        qosReference:
+          type: string
+          description: Identifies a pre-defined QoS information.
+          example: "gameReferenceII"
+        usageThreshold:
+          $ref: '#/components/schemas/UsageThresholdRm__TS29122_CommonData'
+        expirationTime:
+          $ref: '#/components/schemas/ExpirationTime'
+        extensions:
+          $ref: '#/components/schemas/Extensions'
+    NotificationData:
+      type: object
+      properties:
+        transaction:
+          type: string
+          description: |
+            Specifies the link to the QoS policy subscription resource. This
+            parameter is supplied by the SCEF in the HTTP POST response when a
+            QoS policy subscription is created successfully. Normally, the
+            format of this parameter is
+            <qos_policy_api_root>/3gpp-as-session-with-qos/v1/<scsAsId>/subscriptions/<subscriptionId>.
+            Where, the *qos_policy_api_root* is configured via Configuration
+            Manager. For more information, refer to the CPI guide *Getting Started
+            with Service Capability Exposure Function*. The *scsAsId* is the
+            identifier of the SCS/AS. See parameter *scsAsId* for more details.
+            The *subscriptionId* is generated by SCEF to
+            identify the individual subscription resource. See parameter
+            *subscriptionId* for more details.
+          example: "https://example.com/3gpp-as-session-with-qos/v1/scsAsId/subscriptions/MTI3LjAuMC4xOy0xNTA5ODQ4NDc4OzE7ZGMxO1NDRUZfUU9TOzA="
+        eventReports:
+          type: array
+          items:
+            $ref: '#/components/schemas/EventReport'
+          minItems: 1
+          description: Contains the reported event and applicable information.
+      required:
+        - transaction
+        - eventReports
+    FlowInfo:
+      type: object
+      properties:
+        flowId:
+          type: integer
+          description: Identifies an IP flow.
+          example: 11
+        flowDescriptions:
+          type: array
+          items:
+            type: string
+          description: |
+            Defines a packet filter for an IP flow with the following information:
+            - Direction (in or out). The direction 'in' refers to uplink IP flows, and the direction 'out' refers to downlink IP flows.
+            - Source and destination IP address.
+            - Protocol.
+            - Source and destination port.
+            The Format is 'permit in %s from %s %s to %s %s' indicates permit in with in-protocol from in-source-ip-address in-source-port to in-destination-ip-address in-destination-port,
+            or 'permit out %s from %s %s to %s %s' indicates permit out with out-protocol from out-source-ip-address out-source-port to out-destination-ip-address out-destination-port.
+            For more information about flow description, refer to subclause 5.3.8 of 3GPP TS 29.214.
+          minItems: 1
+          maxItems: 2
+          example:
+            - permit in 17 from 10.175.188.24 1234 to 10.175.188.23 4321
+            - permit out 6 from 10.175.188.23 4321 to 10.175.188.24 1234
+      required:
+        - flowId
+    EventReport:
+      type: object
+      properties:
+        event:
+          $ref: '#/components/schemas/Event'
+        accumulatedUsage:
+          $ref: '#/components/schemas/AccumulatedUsage__TS29122_CommonData'
+        flowIds:
+          type: array
+          items:
+            type: integer
+            example: 11
+          minItems: 1
+          description: Identifies the IP flows that were sent during event subscription.
+      required:
+        - event
+    Event:
+      type: string
+      enum:
+        - SESSION_TERMINATION
+        - LOSS_OF_BEARER
+        - RECOVERY_OF_BEARER
+        - RELEASE_OF_BEARER
+        - USAGE_REPORT
+        - SUCCESSFUL_RESOURCES_ALLOCATION
+      description: >
+        Possible values are
+        - SESSION_TERMINATION: Indicates that Rx session is terminated.
+        - LOSS_OF_BEARER : Indicates a loss of a bearer.
+        - RECOVERY_OF_BEARER: Indicates a recovery of a bearer.
+        - RELEASE_OF_BEARER: Indicates a release of a bearer.
+        - USAGE_REPORT: Indicates the usage report event.
+        - SUCCESSFUL_RESOURCES_ALLOCATION: Indicates that the Rx session resource allocation is successful.
+      example: USAGE_REPORT
+    ExpirationTime:
+      type: string
+      example: "2019-10-10T17:30:00+08:00"
+      description: Indicates the expiration time of a session in the date-time format as defined in OpenAPI.
+    Extensions:
+      type: string
+      description: Indicates a map to define vendor specific AVPs, the value need to be a stringify JSON object
+      example: "{\"Example-Indicator\":\"ExampleIndicatorValue\",\"Example-Agent-Info\": {\"Example-Agent-Host\": {\"Agent-Realm\": \"agentRealm\",\"Agent-Host\": \"agentHost\"}}"
+    Uri__TS29122_CommonData:
+      type: string
+      description: string providing an URI formatted according to IETF RFC 3986.
+    InvalidParam__TS29122_CommonData:
+      type: object
+      properties:
+        param:
+          type: string
+          description: Attribute's name encoded as a JSON Pointer, or header's name.
+        reason:
+          type: string
+          description: A human-readable reason, e.g. "must be a positive integer".
+      required:
+        - param
+    ProblemDetails__TS29122_CommonData:
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/Uri__TS29122_CommonData'
+        title:
+          type: string
+          description: A short, human-readable summary of the problem type. It should not change from occurrence to occurrence of the problem.
+        status:
+          type: integer
+          description: The HTTP status code for this occurrence of the problem.
+        detail:
+          type: string
+          description: A human-readable explanation specific to this occurrence of the problem.
+        instance:
+          $ref: '#/components/schemas/Uri__TS29122_CommonData'
+        cause:
+          type: string
+          description: A machine-readable application error cause specific to this occurrence of the problem. This IE should be present and provide application-related error information, if available.
+        invalidParams:
+          type: array
+          items:
+            $ref: '#/components/schemas/InvalidParam__TS29122_CommonData'
+          minItems: 1
+          description: Description of invalid parameters, for a request rejected due to invalid parameters.
+    DurationSec__TS29122_CommonData:
+      type: integer
+      minimum: 0
+      description: Unsigned integer identifying a period of time in units of seconds.
+    Volume__TS29122_CommonData:
+      type: integer
+      format: int64
+      minimum: 0
+      description: Unsigned integer identifying a volume in units of bytes.
+    UsageThreshold__TS29122_CommonData:
+      type: object
+      properties:
+        duration:
+          $ref: '#/components/schemas/DurationSec__TS29122_CommonData'
+        totalVolume:
+          $ref: '#/components/schemas/Volume__TS29122_CommonData'
+        downlinkVolume:
+          $ref: '#/components/schemas/Volume__TS29122_CommonData'
+        uplinkVolume:
+          $ref: '#/components/schemas/Volume__TS29122_CommonData'
+    SponsorInformation__TS29122_CommonData:
+      type: object
+      properties:
+        sponsorId:
+          type: string
+          description: Uniquely identifies a Sponsor.
+        aspId:
+          type: string
+          description: Uniquely identifies an Application Service Provider.
+      required:
+        - sponsorId
+        - aspId
+    DurationSecRm__TS29122_CommonData:
+      type: integer
+      minimum: 0
+      description: Unsigned integer identifying a period of time in units of seconds with "nullable=true" property.
+      nullable: true
+    VolumeRm__TS29122_CommonData:
+      type: integer
+      format: int64
+      minimum: 0
+      description: Unsigned integer identifying a volume in units of bytes with "nullable=true" property.
+      nullable: true
+    UsageThresholdRm__TS29122_CommonData:
+      type: object
+      properties:
+        duration:
+          $ref: '#/components/schemas/DurationSecRm__TS29122_CommonData'
+        totalVolume:
+          $ref: '#/components/schemas/VolumeRm__TS29122_CommonData'
+        downlinkVolume:
+          $ref: '#/components/schemas/VolumeRm__TS29122_CommonData'
+        uplinkVolume:
+          $ref: '#/components/schemas/VolumeRm__TS29122_CommonData'
+      nullable: true
+    AccumulatedUsage__TS29122_CommonData:
+      type: object
+      properties:
+        duration:
+          $ref: '#/components/schemas/DurationSec__TS29122_CommonData'
+        totalVolume:
+          $ref: '#/components/schemas/Volume__TS29122_CommonData'
+        downlinkVolume:
+          $ref: '#/components/schemas/Volume__TS29122_CommonData'
+        uplinkVolume:
+          $ref: '#/components/schemas/Volume__TS29122_CommonData'
+  responses:
+    401__TS29122_CommonData:
+      description: Unauthorized
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails__TS29122_CommonData'
+    403__TS29122_CommonData:
+      description: Forbidden
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails__TS29122_CommonData'
+    404__TS29122_CommonData:
+      description: Not Found
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails__TS29122_CommonData'
+    411__TS29122_CommonData:
+      description: Length Required
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails__TS29122_CommonData'
+    413__TS29122_CommonData:
+      description: Payload Too Large
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails__TS29122_CommonData'
+    415__TS29122_CommonData:
+      description: Unsupported Media Type
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails__TS29122_CommonData'
+    429__TS29122_CommonData:
+      description: Too Many Requests
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails__TS29122_CommonData'
+    503__TS29122_CommonData:
+      description: Service Unavailable
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails__TS29122_CommonData'
+    default__TS29122_CommonData:
+      description: Generic Error
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails__TS29122_CommonData'
+    400__TS29122_CommonData:
+      description: Bad request
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails__TS29122_CommonData'
+    406__TS29122_CommonData:
+      description: Not Acceptable
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails__TS29122_CommonData'
+    500__TS29122_CommonData:
+      description: Internal Server Error
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails__TS29122_CommonData'
