@@ -1,0 +1,66 @@
+{
+  "mappings": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "/notifications"
+      },
+      "response": {
+        "status": 200
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "/ODI_ServTestQ8MONTE_Server/subscriptions/1"
+      },
+      "response": {
+        "status": 201,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "bodyFileName": "apigm-createSession.json"
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
+        "url": "/ODI_ServTestQ8MONTE_Server/subscriptions"
+      },
+      "response": {
+        "status": 201,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "bodyFileName": "status.json"
+      }
+    },
+    {
+      "request": {
+        "method": "DELETE",
+        "url": "/ODI_ServTestQ8MONTE_Server/subscriptions/existing_id"
+      },
+      "response": {
+        "status": 204
+      }
+    },
+    {
+      "request": {
+        "method": "DELETE",
+        "url": "/ODI_ServTestQ8MONTE_Server/subscriptions/non_existing_id"
+      },
+      "response": {
+        "status": 404
+      }
+    },
+    {
+      "request": {
+        "method": "DELETE",
+        "urlPathPattern": "/ODI_ServTestQ8MONTE_Server/subscriptions/[a-z0-9A-Z]*"
+      },
+      "response": {
+        "status": 204
+      }
+    }
+  ]
+}

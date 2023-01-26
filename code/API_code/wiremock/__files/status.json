@@ -1,0 +1,9 @@
+{
+  "msisdn": "33699901032",
+  "monitoringType": "ROAMING_STATUS",
+  "plmnid": {
+    "mec": "208",
+    "mnc": "85"
+  },
+  "roamingStatus": false
+}
