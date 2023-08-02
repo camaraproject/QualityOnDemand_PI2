@@ -13,113 +13,121 @@
 
 
 plugins {
-    id("io.quarkus")
-    kotlin("jvm") version "1.7.21"
-    kotlin("plugin.allopen") version "1.7.21"
-    id("org.openapi.generator") version "6.2.0"
-    id("org.owasp.dependencycheck") version "7.4.4"
-    `maven-publish`
-    id("io.gitlab.arturbosch.detekt") version "1.19.0"
-    jacoco
-    id("net.researchgate.release") version "2.8.1"
-    id("io.github.thakurvijendar.dependency-license-report") version "2.1"
     idea
-    id("org.sonarqube") version "3.4.0.2513"
+    id("io.quarkus")
+    kotlin("jvm")
+    kotlin("plugin.allopen")
+    id("org.openapi.generator")
+    id("org.owasp.dependencycheck")
+    id("io.gitlab.arturbosch.detekt")
+    id("io.github.thakurvijendar.dependency-license-report")
+    id("com.github.ben-manes.versions")
 }
 
-val quarkusPluginVersion: String by project
-val quarkusPlatformGroupId: String by project
 val quarkusPlatformArtifactId: String by project
-val quarkusPlatformVersion: String by project
+val quarkusPlatformGroupId: String by project
+val quarkusVersion: String by project
+val javaVersion: String by project
+val kotlinVersion: String by project
+val detektVersion: String by project
+val wiremockJre8Version: String by project
+val mockitoKotlinVersion: String by project
+val swaggerAnnotationVersion: String by project
+val jacksonDatabindNullableVersion: String by project
+val assertjCoreVersion: String by project
 
+val javaEnumVersion = JavaVersion.valueOf("VERSION_$javaVersion")
 
 repositories {
     mavenLocal()
+    maven {
+        setUrl("https://jcenter.bintray.com/")
+    }
     mavenCentral()
 }
 
-configurations {
-    compileOnly {
-        extendsFrom(configurations.annotationProcessor.get())
-    }
-}
-
 dependencies {
-    implementation(enforcedPlatform("$quarkusPlatformGroupId:$quarkusPlatformArtifactId:$quarkusPlatformVersion"))
+    implementation(enforcedPlatform("${quarkusPlatformGroupId}:${quarkusPlatformArtifactId}:${quarkusVersion}"))
     implementation("io.quarkus:quarkus-resteasy-reactive")
     implementation("io.quarkus:quarkus-resteasy-reactive-jackson")
     implementation("io.quarkus:quarkus-rest-client-reactive-jackson")
+
+    implementation("io.quarkus:quarkus-arc")
+
     implementation("io.quarkus:quarkus-oidc-client-reactive-filter")
     implementation("io.quarkus:quarkus-oidc-client")
 
-    implementation("io.quarkus:quarkus-smallrye-opentracing")
     implementation("io.quarkus:quarkus-smallrye-openapi")
-    implementation("io.quarkus:quarkus-smallrye-health")
-    implementation("io.quarkus:quarkus-smallrye-metrics")
-
     implementation("io.quarkus:quarkus-kotlin")
     implementation("io.quarkus:quarkus-jackson")
-    implementation("io.quarkus:quarkus-arc")
+
+    implementation("jakarta.validation:jakarta.validation-api")
+    implementation("io.quarkus:quarkus-hibernate-validator")
+
+    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
+    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-xml")
+
     implementation("io.quarkus:quarkus-undertow")
     implementation("io.quarkus:quarkus-redis-client")
     implementation("io.quarkus:quarkus-container-image-jib")
     implementation("io.quarkus:quarkus-kubernetes-config")
 
-    implementation("io.quarkus:quarkus-hibernate-validator")
-    implementation("javax.validation:validation-api:2.0.1.Final")
-    implementation("io.swagger:swagger-annotations:1.6.5")
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.13.3")
-    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.13.3")
-    implementation("org.openapitools:jackson-databind-nullable:0.2.3")
+    implementation("io.quarkus:quarkus-security")
+    implementation("io.quarkus:quarkus-elytron-security-properties-file")
 
-    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.6.21")
-    implementation("org.apache.commons:commons-lang3:3.12.0")
+    implementation("org.jboss.logmanager:log4j2-jboss-logmanager")
+
+    implementation("org.apache.commons:commons-lang3")
+
+    implementation("io.swagger:swagger-annotations:$swaggerAnnotationVersion")
+    implementation("org.openapitools:jackson-databind-nullable:$jacksonDatabindNullableVersion")
+
+    detekt("io.gitlab.arturbosch.detekt:detekt-cli:$detektVersion")
+    detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:$detektVersion")
+    detektPlugins("io.gitlab.arturbosch.detekt:detekt-rules:$detektVersion")
+    detektPlugins("io.gitlab.arturbosch.detekt:detekt-rules-libraries:$detektVersion")
+    detektPlugins("io.gitlab.arturbosch.detekt:detekt-rules-ruleauthors:$detektVersion")
+
 
     testImplementation("io.quarkus:quarkus-junit5")
     testImplementation("io.quarkus:quarkus-junit5-mockito")
     testImplementation("io.quarkus:quarkus-jacoco")
-    testImplementation("io.rest-assured:rest-assured:5.1.1")
-    testImplementation("com.github.tomakehurst:wiremock-jre8:2.33.2")
-    testImplementation("org.mockito.kotlin:mockito-kotlin:4.0.0")
+    testImplementation("io.rest-assured:rest-assured")
 
+    testImplementation("com.github.tomakehurst:wiremock-jre8:$wiremockJre8Version")
+    testImplementation("org.mockito.kotlin:mockito-kotlin:$mockitoKotlinVersion")
+    testImplementation("org.assertj:assertj-core:$assertjCoreVersion")
 }
 
-
 java {
-    sourceCompatibility = JavaVersion.VERSION_11
-    targetCompatibility = JavaVersion.VERSION_11
+    sourceCompatibility = javaEnumVersion
+    targetCompatibility = javaEnumVersion
 }
 
 allOpen {
-    annotation("javax.ws.rs.Path")
-    annotation("javax.inject.ApplicationScoped")
-    annotation("javax.enterprise.context.ApplicationScoped")
+    annotation("jakarta.ws.rs.Path")
+    annotation("jakarta.inject.ApplicationScoped")
+    annotation("jakarta.enterprise.context.ApplicationScoped")
     annotation("io.quarkus.test.junit.QuarkusTest")
 }
 
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
     kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_11.toString()
+        jvmTarget = javaEnumVersion.toString()
         freeCompilerArgs += listOf("-Xjvm-default=all")
-        jvmTarget = JavaVersion.VERSION_11.toString()
         javaParameters = true
     }
-    dependsOn("swagger", "swagger-scef")
+    dependsOn("swagger", "swagger-admin", "swagger-scef", "swagger-notif")
 }
 
 tasks.withType<JavaCompile> {
     options.compilerArgs.add("-parameters")
 }
 
-tasks.withType<io.quarkus.gradle.tasks.QuarkusAddExtension> {
-    extensionsToAdd = listOf(
-        "quarkus-undertow",
-        "quarkus-resteasy-reactive-jackson",
-        "quarkus-rest-client-reactive-jackson",
-        "quarkus-hibernate-validator",
-        "quarkus-jaxb",
-        "quarkus-redis"
-    )
+tasks.withType<Test> {
+    useJUnitPlatform()
 }
 
 sourceSets {
@@ -142,8 +150,9 @@ sourceSets {
 
 tasks.create("swagger", org.openapitools.generator.gradle.plugin.tasks.GenerateTask::class) {
     generatorName.set("jaxrs-spec")
-    inputSpec.set("$rootDir/src/main/resources/META-INF/openapi.yaml")
+    inputSpec.set("$rootDir/src/main/resources/qod.yaml")
     outputDir.set("$buildDir/swagger")
+    skipValidateSpec.set(false)
     additionalProperties.putAll(
         mapOf(
             "library" to "quarkus",
@@ -158,15 +167,44 @@ tasks.create("swagger", org.openapitools.generator.gradle.plugin.tasks.GenerateT
             "apiPackage" to "com.camara.api",
             "dateLibrary" to "java8",
             "java8" to "true",
-            "useOneOfInterfaces" to "true"
+            //"useOneOfInterfaces" to "true",
+            "legacyDiscriminatorBehavior" to "true",
+            "useJakartaEe" to "true"
+        )
+    )
+}
+
+tasks.create("swagger-notif", org.openapitools.generator.gradle.plugin.tasks.GenerateTask::class) {
+    generatorName.set("jaxrs-spec")
+    inputSpec.set("$rootDir/src/main/resources/notification.yaml")
+    outputDir.set("$buildDir/swagger")
+    skipValidateSpec.set(false)
+    additionalProperties.putAll(
+        mapOf(
+            "library" to "quarkus",
+            "generateApis" to "true",
+            "interfaceOnly" to "true",
+            "skipDefaultInterface" to "true",
+            "hideGenerationTimestamp" to "true",
+            "useTags" to "true",
+            "useBeanValidation" to "true",
+            "invokerPackage" to "com.camara.client",
+            "modelPackage" to "com.camara.model",
+            "apiPackage" to "com.camara.api",
+            "dateLibrary" to "java8",
+            "java8" to "true",
+            //"useOneOfInterfaces" to "true",
+            "legacyDiscriminatorBehavior" to "true",
+            "useJakartaEe" to "true"
         )
     )
 }
 
 tasks.create("swagger-scef", org.openapitools.generator.gradle.plugin.tasks.GenerateTask::class) {
     generatorName.set("jaxrs-spec")
-    inputSpec.set("$rootDir/src/main/resources/META-INF/fixed-scef-ericsson.yaml")
+    inputSpec.set("$rootDir/src/main/resources/fixed-scef-ericsson.yaml")
     outputDir.set("$buildDir/swagger-scef")
+    skipValidateSpec.set(false)
     additionalProperties.putAll(
         mapOf(
             "library" to "quarkus",
@@ -180,50 +218,52 @@ tasks.create("swagger-scef", org.openapitools.generator.gradle.plugin.tasks.Gene
             "modelPackage" to "com.camara.scef.model",
             "apiPackage" to "com.camara.scef.api",
             "dateLibrary" to "java8",
-            "java8" to "true"
+            "java8" to "true",
+            "legacyDiscriminatorBehavior" to "false",
+            "useJakartaEe" to "true"//,
+            //"returnResponse" to "true"
         )
     )
 }
 
-tasks.withType<Test> {
-    useJUnitPlatform()
-}
-
-val snapshotsRepoUrl = uri("https://artifactory.tech.orange/artifactory/maven-snapshot-repo/")
-val releasesRepoUrl = uri("https://artifactory.tech.orange/artifactory/maven-release-repo/")
-
-tasks.dependencyCheckAnalyze {
-    isEnabled = true
+tasks.create("swagger-admin", org.openapitools.generator.gradle.plugin.tasks.GenerateTask::class) {
+    generatorName.set("jaxrs-spec")
+    inputSpec.set("$rootDir/src/main/resources/admin.yaml")
+    outputDir.set("$buildDir/swagger")
+    skipValidateSpec.set(false)
+    additionalProperties.putAll(
+        mapOf(
+            "library" to "quarkus",
+            "generateApis" to "true",
+            "interfaceOnly" to "true",
+            "skipDefaultInterface" to "true",
+            "hideGenerationTimestamp" to "true",
+            "useTags" to "true",
+            "useBeanValidation" to "true",
+            "invokerPackage" to "com.camara.client",
+            "modelPackage" to "com.camara.model",
+            "apiPackage" to "com.camara.api",
+            "dateLibrary" to "java8",
+            "java8" to "true",
+            "useOneOfInterfaces" to "true",
+            "legacyDiscriminatorBehavior" to "false",
+            "useJakartaEe" to "true"
+        )
+    )
 }
 
 detekt {
     buildUponDefaultConfig = true // preconfigure defaults
     allRules = false // activate all available (even unstable) rules.
-    config = files("$projectDir/config/detekt/detekt.yml")
+    config.setFrom("$projectDir/config/detekt/detekt.yml")
     ignoreFailures = true
 }
 
 tasks.withType<io.gitlab.arturbosch.detekt.Detekt>().configureEach {
     reports {
-        html.required.set(false) // observe findings in your browser with structure and code snippets
+        html.required.set(true) // observe findings in your browser with structure and code snippets
         xml.required.set(true) // checkstyle like format mainly for integrations like Jenkins
         sarif.required.set(false) // standardized SARIF format (https://sarifweb.azurewebsites.net/) to support integrations with Github Code Scanning
     }
 }
 
-tasks.test {
-    configure<JacocoTaskExtension> {
-        excludeClassLoaders = listOf("*QuarkusClassLoader")
-        destinationFile?.renameTo(layout.buildDirectory.file("jacoco-quarkus.exec").get().asFile)
-    }
-    finalizedBy(tasks.jacocoTestReport)
-}
-
-tasks.jacocoTestReport {
-    dependsOn(tasks.test) // tests are required to run before generating the report
-    reports {
-        xml.required.set(true)
-        csv.required.set(false)
-        html.outputLocation.set(layout.buildDirectory.dir("jacocoHtml"))
-    }
-}

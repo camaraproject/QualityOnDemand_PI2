@@ -15,19 +15,20 @@ package com.camara.session
 import com.camara.model.CreateSession
 import com.camara.model.SessionInfo
 import io.smallrye.mutiny.Uni
+import jakarta.enterprise.context.ApplicationScoped
+import jakarta.validation.Valid
+import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.DELETE
+import jakarta.ws.rs.GET
+import jakarta.ws.rs.POST
+import jakarta.ws.rs.Path
+import jakarta.ws.rs.PathParam
+import jakarta.ws.rs.Produces
+import jakarta.ws.rs.core.MediaType
+import jakarta.ws.rs.core.Response
+import org.jboss.resteasy.reactive.RestHeader
 import java.net.URI
 import java.util.UUID
-import javax.enterprise.context.ApplicationScoped
-import javax.validation.Valid
-import javax.ws.rs.Consumes
-import javax.ws.rs.DELETE
-import javax.ws.rs.GET
-import javax.ws.rs.POST
-import javax.ws.rs.Path
-import javax.ws.rs.PathParam
-import javax.ws.rs.Produces
-import javax.ws.rs.core.MediaType
-import javax.ws.rs.core.Response
 
 @ApplicationScoped
 @Path("/sessions")
@@ -38,39 +39,52 @@ class SessionController(
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    fun createSession(@Valid createSession: CreateSession): Uni<Response> {
+    fun createSession(
+        @Valid
+        createSession: CreateSession,
+        @RestHeader("X-OAPI-Application-Id")
+        applicationId: String,
+    ): Uni<Response> {
         checkParameters(createSession)
-        return service.createSession(createSession).map {
-            Response.created(URI("sessions/${it.id}"))
+        return service.createSession(createSession, applicationId).map {
+            Response.created(URI("sessions/${it.sessionId}"))
                 .entity(it)
                 .build()
         }
     }
 
     private fun checkParameters(createSession: CreateSession) {
-        if (createSession.asPorts.ranges != null && createSession.asPorts.ranges.isNotEmpty()) {
-            val nbOfRanges = createSession.asPorts.ranges.size
-            if (nbOfRanges != createSession.asPorts.ranges.filter { it.from < it.to }.size)
-                throw IllegalArgumentException(FROM_MUST_BE_LOWER_THAN_TO)
+        if (createSession.applicationServerPorts.ranges != null &&
+            createSession.applicationServerPorts.ranges.isNotEmpty()
+        ) {
+            val nbOfRanges = createSession.applicationServerPorts.ranges.size
+            val nbOfCompliantRanges = createSession.applicationServerPorts.ranges.filter { it.from < it.to }.size
+            require(nbOfRanges == nbOfCompliantRanges) { FROM_MUST_BE_LOWER_THAN_TO }
         }
     }
 
-
     @DELETE
     @Path("/{sessionId}")
-    fun deleteSession(@PathParam("sessionId") sessionId: UUID) {
-        service.deleteSession(sessionId)
+    fun deleteSession(
+        @PathParam("sessionId") sessionId: UUID,
+        @RestHeader("X-OAPI-Application-Id")
+        applicationId: String,
+    ): Uni<Void> {
+        return service.deleteSession(sessionId, applicationId)
     }
 
     @GET
     @Path("/{sessionId}")
     @Produces(MediaType.APPLICATION_JSON)
-    fun getSession(@PathParam("sessionId") sessionId: UUID): Uni<SessionInfo?> {
-        return service.getSession(sessionId)
+    fun getSession(
+        @PathParam("sessionId") sessionId: UUID,
+        @RestHeader("X-OAPI-Application-Id")
+        applicationId: String,
+    ): Uni<SessionInfo?> {
+        return service.getSession(sessionId, applicationId)
     }
 
     companion object {
         const val FROM_MUST_BE_LOWER_THAN_TO = "from must be lower than to in port ranges"
-
     }
 }

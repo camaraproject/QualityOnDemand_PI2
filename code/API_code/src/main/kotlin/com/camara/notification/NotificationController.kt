@@ -13,14 +13,13 @@
 package com.camara.notification
 
 import com.camara.scef.model.NotificationData
-import java.util.UUID
-import javax.enterprise.context.ApplicationScoped
-import javax.validation.Valid
-import javax.validation.constraints.NotNull
-import javax.ws.rs.Consumes
-import javax.ws.rs.POST
-import javax.ws.rs.Path
-import javax.ws.rs.PathParam
+import jakarta.enterprise.context.ApplicationScoped
+import jakarta.validation.Valid
+import jakarta.validation.constraints.NotNull
+import jakarta.ws.rs.Consumes
+import jakarta.ws.rs.POST
+import jakarta.ws.rs.Path
+import jakarta.ws.rs.PathParam
 
 @ApplicationScoped
 @Path("/notifications")
@@ -31,7 +30,7 @@ class NotificationController(
     @Consumes("application/json")
     @Path("/{id}")
     fun notification(
-        @PathParam("id") id: UUID,
+        @PathParam("id") id: String,
         @Valid @NotNull notification: NotificationData,
     ) {
         service.notify(notification, id)

@@ -15,10 +15,10 @@ package com.camara.session
 import com.camara.TestUtils.createSessionInfo
 import com.camara.configuration.CamaraQoDConfiguration
 import io.quarkus.test.junit.QuarkusTest
-import org.junit.jupiter.api.Assertions.assertEquals
+import jakarta.inject.Inject
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.net.URI
-import javax.inject.Inject
 
 @QuarkusTest
 internal class SessionMapperTest {
@@ -32,16 +32,17 @@ internal class SessionMapperTest {
     @Test
     fun `buildNotificationUrl should return an uri equal to baseUrl+sessionId`() {
         val session = createSessionInfo().apply {
-            notificationUri = URI("https://mybaseUrl")
+            webhook.notificationUrl = URI("https://mybaseUrl")
         }
         val suffix = camaraQoDConfiguration.odiSuffix().orElse("")
         val url = sessionMapper.buildNotificationUrl(session, "http://mybaseUrl")
-        assertEquals("http://mybaseUrl/${session.id}$suffix", url)
+        assertThat(url)
+            .isEqualTo("http://mybaseUrl/${session.sessionId}$suffix")
     }
 
     @Test
     fun `expirationDate must not contain Z for zulu time but an offset`() {
-        println(sessionMapper.mapSecondsSinceEpochToIsoOffsetDateTime(60))
-
+        assertThat(sessionMapper.mapSecondsSinceEpochToIsoOffsetDateTime(60))
+            .doesNotContain("Z")
     }
 }
