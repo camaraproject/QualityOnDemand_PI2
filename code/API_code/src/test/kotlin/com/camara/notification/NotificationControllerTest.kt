@@ -15,8 +15,8 @@ package com.camara.notification
 
 import com.camara.TestUtils
 import com.camara.TestUtils.createNotificationData
+import io.quarkus.test.InjectMock
 import io.quarkus.test.junit.QuarkusTest
-import io.quarkus.test.junit.mockito.InjectMock
 import io.restassured.RestAssured
 import io.restassured.http.ContentType
 import org.junit.jupiter.api.Test
@@ -36,18 +36,17 @@ internal class NotificationControllerTest {
         val sessionId = UUID.randomUUID()
         val session = TestUtils.createSessionInfo(sessionId)
         val notification = createNotificationData(sessionId)
-        doNothing().`when`(notificationService).notify(notification, sessionId)
+        doNothing().`when`(notificationService).notify(notification, "appId:$sessionId")
 
         RestAssured.given()
             .contentType(ContentType.JSON)
             .body(notification)
             .`when`()
-            .post("/notifications/${session.id}")
+            .post(("/notifications/appId:${session.sessionId}"))
             .then()
             .statusCode(204)
 
         verify(notificationService, times(1))
-            .notify(notification, sessionId)
-
+            .notify(notification, "appId:${session.sessionId}")
     }
 }

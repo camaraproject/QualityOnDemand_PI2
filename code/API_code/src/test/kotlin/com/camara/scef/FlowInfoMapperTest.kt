@@ -14,27 +14,33 @@
 package com.camara.scef
 
 import com.camara.TestUtils
+import com.camara.TestUtils.createQoSProfile
 import com.camara.model.PortsSpec
 import com.camara.model.PortsSpecRangesInner
-import com.camara.model.QosProfile
 import com.camara.scef.FlowInfoMapper.Companion.PROTOCOL
-import org.junit.jupiter.api.Assertions.assertEquals
+import io.quarkus.test.junit.QuarkusTest
+import jakarta.inject.Inject
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import java.util.UUID
 
+@QuarkusTest
 internal class FlowInfoMapperTest {
 
+    @Inject
+    lateinit var flowInfoMapper: FlowInfoMapper
 
-    val flowInfoMapper = FlowInfoMapper()
+    final val profileName: String = UUID.randomUUID().toString()
+
+    val profileCache = com.camara.profile.ProfileCache(1, createQoSProfile(profileName))
 
     @Test
     fun `flowInfos should build expected IPFilterRule from sessionInfo`() {
         val sessionInfo = TestUtils.createSessionInfo()
-        val result = flowInfoMapper.flowInfos(sessionInfo)
-        assertEquals(1, result.size)
-        assertEquals(
-            "permit in $PROTOCOL from 192.168.0.2 5022 to 192.168.0.1 5010",
-            result.first().flowDescriptions.first()
-        )
+        val result = flowInfoMapper.flowInfos(sessionInfo, profileCache)
+        assertThat(result.size).isEqualTo(1)
+        assertThat(result.first().flowDescriptions.first())
+            .isEqualTo("permit in $PROTOCOL from 192.168.0.2 5022 to 192.168.0.1 5010")
     }
 
     @Test
@@ -46,34 +52,35 @@ internal class FlowInfoMapperTest {
             )
         ).ports(listOf(19, 20))
         val expected = IntRange(10, 20).toList()
-        assertEquals(expected, flowInfoMapper.extractPortList(portSpecs))
+        assertThat(flowInfoMapper.extractPortList(portSpecs)).isEqualTo(expected)
     }
 
     @Test
     fun `extractPortPairs should return cartesian product of uePorts and asPorts`() {
         val expected = listOf(Pair(1, 3), Pair(1, 4), Pair(2, 3), Pair(2, 4))
         val result = flowInfoMapper.extractPortsPairs(IntRange(1, 2), IntRange(3, 4))
-        assertEquals(expected, result)
+        assertThat(result).isEqualTo(expected)
     }
 
     @Test
     fun `flowInfos should return a list of flow descriptions for each Pair(uePort, asPort)`() {
         val sessionInfo = TestUtils.createSessionInfo()
-            .qos(QosProfile.L)
-            .uePorts(PortsSpec().ports(listOf(4)))
-            .asPorts(
+            .qosProfile(profileName)
+            .devicePorts(PortsSpec().ports(listOf(4)))
+            .applicationServerPorts(
                 PortsSpec().ranges(
                     listOf(
                         PortsSpecRangesInner().from(1).to(2)
                     )
                 ).ports(listOf(3))
             )
-        val result = flowInfoMapper.flowInfos(sessionInfo)
-        assertEquals(3, result.size)
-        assertEquals(
-            1,
-            result.filter { it.flowDescriptions.contains("permit in $PROTOCOL from 192.168.0.2 4 to 192.168.0.1 2") }.size
-        )
+        val result = flowInfoMapper.flowInfos(sessionInfo, profileCache)
+        assertThat(result.size).isEqualTo(3)
+        assertThat(
+            result.filter {
+                it.flowDescriptions
+                    .contains("permit in $PROTOCOL from 192.168.0.2 4 to 192.168.0.1 2")
+            }.size
+        ).isEqualTo(1)
     }
-
 }

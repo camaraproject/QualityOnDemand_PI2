@@ -17,9 +17,9 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.kotlinModule
 import io.quarkus.jackson.ObjectMapperCustomizer
+import jakarta.inject.Singleton
 import java.text.SimpleDateFormat
 import java.util.TimeZone
-import javax.inject.Singleton
 
 
 @Singleton

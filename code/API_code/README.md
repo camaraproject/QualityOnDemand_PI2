@@ -1,22 +1,41 @@
-# camara Project
+# CAMARA QoD API by Orange
 
-This project uses Quarkus, the Supersonic Subatomic Java Framework.
+This project implements CAMARA QoD API in front of SCEF.
 
-If you want to learn more about Quarkus, please visit its website: https://quarkus.io/ .
+The SCEF can be emulated by wiremock.
+Minimal wiremock configuration is provided in wiremock directory.
+You can download wiremock from the official website [here](https://wiremock.org/).
 
-## Running the application in dev mode
+Note: As we use redis to cache sessions, you need to have a running docker env to be able to start automatically redis
+in dev mode, or you must provide your redis address in configuration.
 
-You can run your application in dev mode that enables live coding using:
+## Configuration
+
+### Build time
+
+The Quarkus application configuration is located in `src/main/resources/application.properties`.
+[Related guide section...](https://quarkus.io/guides/config-reference#configuration-examples)
+
+### Run time
+
+Every configuration in application.properties can be overridden at run time by environment variables.
+In general the name substitution of parameter follows simple rules. For example, foo.bar.baz should be replaced by
+FOO_BAR_BAZ.
+You can find complete substitution rules [here](https://quarkus.io/guides/config-reference#environment-variables).
+
+## Packaging and running the application
+
+This application uses JDK 17+.
+
+### Running the application in dev mode
+
+To quickly test your configuration you can run application in dev mode that enables live coding using:
 
 ```shell script
 ./gradlew quarkusDev
 ```
 
-> **_NOTE:_**  Quarkus now ships with a Dev UI, which is available in dev mode only at http://localhost:8080/q/dev/.
-
-## Packaging and running the application
-
-The application can be packaged using:
+### The application can be packaged using:
 
 ```shell script
 ./gradlew build
@@ -35,59 +54,15 @@ If you want to build an _über-jar_, execute the following command:
 
 The application, packaged as an _über-jar_, is now runnable using `java -jar build/*-runner.jar`.
 
-## Creating a native executable
-
-You can create a native executable using:
+### Running app in docker
 
 ```shell script
-./gradlew build -Dquarkus.package.type=native
+docker build -t camara/qod  -f Dockerfile .
+docker run -i --rm -p 8080:8080 camara/qod
 ```
 
-Or, if you don't have GraalVM installed, you can run the native executable build in a container using:
+## Play with swagger-ui
 
-```shell script
-./gradlew build -Dquarkus.package.type=native -Dquarkus.native.container-build=true
-```
+When application is running, you can play with [swagger-ui](http://localhost:8080/qod/v1/q/swagger-ui) to test the
+service. 
 
-You can then execute your native executable with: `./build/quarkus-kotlin-1.1.0-SNAPSHOT-runner`
-
-If you want to learn more about building native executables, please consult https://quarkus.io/guides/gradle-tooling.
-
-## Running native app in docker
-
-```shell script
-docker build -t camara/qos  -f src/main/docker/Dockerfile.native  .
-docker run -i --rm -p 8080:8080 camara/qos
-```
-
-## Related Guides
-
-- REST Client ([guide](https://quarkus.io/guides/rest-client)): Call REST services
-- YAML Configuration ([guide](https://quarkus.io/guides/config#yaml)): Use YAML to configure your Quarkus application
-- Kotlin ([guide](https://quarkus.io/guides/kotlin)): Write your services in Kotlin
-
-## Provided Code
-
-### YAML Config
-
-Configure your application with YAML
-
-[Related guide section...](https://quarkus.io/guides/config-reference#configuration-examples)
-
-The Quarkus application configuration is located in `src/main/resources/application.yml`.
-
-### REST Client
-
-Invoke different services through REST with JSON
-
-[Related guide section...](https://quarkus.io/guides/rest-client)
-
-### RESTEasy Reactive
-
-Easily start your Reactive RESTful Web Services
-
-[Related guide section...](https://quarkus.io/guides/getting-started-reactive#reactive-jax-rs-resources)
-
-### Play with swagger-ui
-
-http://localhost:8080/qod/v1/q/swagger-ui

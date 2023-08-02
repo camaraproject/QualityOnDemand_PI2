@@ -14,6 +14,8 @@
 package com.camara.scef
 
 data class FlowParam(
-    val ueIp: String, val uePort: String,
-    val asIp: String, val asPort: String,
+    val ueIp: String,
+    val uePort: String,
+    val asIp: String,
+    val asPort: String,
 )

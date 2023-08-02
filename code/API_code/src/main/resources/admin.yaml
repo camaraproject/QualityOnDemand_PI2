@@ -1,0 +1,96 @@
+openapi: 3.0.3
+info:
+  title: QoD Profile administration
+  description: Service Enabling Management of QoS profiles
+  termsOfService: http://swagger.io/terms/
+  contact:
+    email: project-email@sample.com
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+  version: 0.9.0-wip
+externalDocs:
+  description: Product documentation at Camara
+  url: https://github.com/camaraproject/
+security:
+  - oAuth2ClientCredentials: [ ]
+servers:
+  - url: https://qod-camara-api.apps.fr01.paas.tech.orange
+  - url: "{apiRoot}/{basePath}"
+    variables:
+      apiRoot:
+        default: http://localhost:8080
+        description: API root
+      basePath:
+        default: qod/v0/admin
+        description: Base path for the QoD Profile Admin
+paths:
+  /admin/profiles:
+    get:
+      tags:
+        - QoS Admin profiles
+      summary: "Get profiles"
+      operationId: getProfiles
+      responses:
+        "200":
+          description: "Ok"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ProfileCache"
+
+  /admin/profiles/{profileName}:
+    put:
+      tags:
+        - QoS Admin profiles
+      summary: "Create profile information"
+      operationId: putProfile
+      parameters:
+        - name: profileName
+          in: path
+          description: Profile name that must be used in createSession operation
+          schema:
+            $ref: "qod.yaml#/components/schemas/QosProfileName"
+          required: true
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProfileCache"
+      responses:
+        "201":
+          description: "Created"
+        "400":
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                $ref: "qod.yaml#/components/responses/Generic400"
+components:
+  securitySchemes:
+    oAuth2ClientCredentials:
+      type: oauth2
+      description: This API uses OAuth 2 with the client credentials grant flow.
+      flows:
+        clientCredentials:
+          tokenUrl: "{tokenUrl}"
+          scopes: { }
+    apiKey:
+      type: apiKey
+      description: API key to authorize requests
+      name: apikey
+      in: query
+  schemas:
+    ProfileCache:
+      type: object
+      required:
+        - flowId
+        - qosProfile
+      properties:
+        flowId:
+          type: integer
+          description: "Id of flow to use in mapping"
+        qosProfile:
+          $ref: "qod.yaml#/components/schemas/QosProfile"

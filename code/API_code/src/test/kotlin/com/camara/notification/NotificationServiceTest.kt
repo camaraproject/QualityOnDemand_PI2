@@ -15,35 +15,35 @@ package com.camara.notification
 
 import com.camara.TestUtils
 import com.camara.TestUtils.createNotificationData
-import com.camara.redis.RedisCacheClient
+import com.camara.redis.SessionCacheClient
 import com.camara.session.SessionCache
 import com.camara.stubForOauth
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.common.ConsoleNotifier
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration
+import io.quarkus.test.InjectMock
 import io.quarkus.test.junit.QuarkusTest
-import io.quarkus.test.junit.mockito.InjectMock
 import io.smallrye.mutiny.Uni
+import jakarta.inject.Inject
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
-import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
-import javax.inject.Inject
 
 @QuarkusTest
-@TestInstance(TestInstance.Lifecycle.PER_CLASS) //To be able to define @BeforeEach @AfterAll
+@TestInstance(TestInstance.Lifecycle.PER_CLASS) // To be able to define @BeforeEach @AfterAll
 internal class NotificationServiceTest {
 
     @Inject
     lateinit var notificationService: NotificationService
 
     @InjectMock
-    lateinit var redisCacheClient: RedisCacheClient
+    lateinit var sessionCacheClient: SessionCacheClient
 
     val wiremock: WireMockServer = WireMockServer(
         WireMockConfiguration.options().port(8888).notifier(ConsoleNotifier(true))
@@ -63,22 +63,22 @@ internal class NotificationServiceTest {
     @Test
     fun notifyTest() {
         val session = TestUtils.createSessionInfo()
-        val notification = createNotificationData().transaction(session.id.toString())
-        val sessionCache = SessionCache(session.id, notification.transaction.toString(), session)
-        `when`(redisCacheClient.readEntry(session.id)).thenReturn(
+        val sessionId = "appId:${session.sessionId}"
+        val notification = createNotificationData().transaction(session.sessionId.toString())
+        val sessionCache = SessionCache(sessionId, notification.transaction.toString(), session)
+        `when`(sessionCacheClient.readEntry(sessionId)).thenReturn(
             Uni.createFrom().item(sessionCache)
         )
 
         wiremock.stubFor(
-            WireMock.post(WireMock.urlEqualTo("${session.notificationUri.path}/notifications"))
+            WireMock.post(WireMock.urlEqualTo("${session.webhook?.notificationUrl?.path}/notifications"))
                 .willReturn(WireMock.ok())
         )
 
-        notificationService.notify(notification, session.id)
-        verify(redisCacheClient, times(1))
-            .readEntry(session.id)
+        notificationService.notify(notification, sessionId)
+        verify(sessionCacheClient, times(1))
+            .readEntry(sessionId)
 
-        assertEquals(0, wiremock.findUnmatchedRequests().requests.size)
-
+        assertThat(wiremock.findUnmatchedRequests().requests.size).isEqualTo(0)
     }
 }

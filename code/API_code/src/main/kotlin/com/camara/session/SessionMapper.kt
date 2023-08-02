@@ -14,14 +14,14 @@ package com.camara.session
 
 import com.camara.configuration.CamaraQoDConfiguration
 import com.camara.model.SessionInfo
+import com.camara.profile.ProfileCache
 import com.camara.scef.FlowInfoMapper
-import com.camara.scef.QosProfileEnum
 import com.camara.scef.model.AsSessionWithQoSSubscription
+import jakarta.enterprise.context.ApplicationScoped
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
-import javax.enterprise.context.ApplicationScoped
 
 @ApplicationScoped
 class SessionMapper(
@@ -31,15 +31,17 @@ class SessionMapper(
 
     fun mapSessionInfoToAsSessionWithQoSSubscription(
         session: SessionInfo,
+        profileCache: ProfileCache,
     ): AsSessionWithQoSSubscription {
+        val flow = flowInfoMapper.flowInfos(session, profileCache)
         return AsSessionWithQoSSubscription()
-            .flowInfo(flowInfoMapper.flowInfos(session))
+            .flowInfo(flow)
             .supportedFeatures("0")
-            .ueIpv4Addr(session.ueId.ipv4addr)
-            .ueIpv6Addr(session.ueId.ipv6addr)
-            .externalId(session.ueId.externalId)
-            .msisdn(session.ueId.msisdn)
-            .qosReference(QosProfileEnum.valueOf(session.qos.toString()).qosId)
+            .ueIpv4Addr(session.device.ipv4Address.publicAddress)
+            .ueIpv6Addr(session.device.ipv6Address?.toString())
+            .externalId(session.device.networkAccessIdentifier)
+            .msisdn(session.device.phoneNumber)
+            .qosReference(profileCache.qosProfile.name)
             .notificationDestination(buildNotificationUrl(session, camaraQoDConfiguration.baseUrl()))
             .expirationTime(mapSecondsSinceEpochToIsoOffsetDateTime(session.duration.toLong()))
     }
@@ -52,12 +54,12 @@ class SessionMapper(
 
     fun buildNotificationUrl(session: SessionInfo, baseUrl: String): String {
         val odiSuffix = camaraQoDConfiguration.odiSuffix().orElse("")
-        return "$baseUrl/${session.id}$odiSuffix"
+        return "$baseUrl/${session.sessionId}$odiSuffix"
     }
 
     companion object {
         const val NONE = "none"
         const val AUTH_TOKEN = "&authToken="
-        const val ONE_DAY_IN_SECONDS = 86400
+        const val ONE_DAY_IN_SECONDS = 86_400
     }
 }

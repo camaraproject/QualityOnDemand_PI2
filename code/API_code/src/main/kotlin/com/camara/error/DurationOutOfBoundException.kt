@@ -10,16 +10,9 @@
 *
 * Author: patrice.conil@orange.com
 */
-package com.camara.configuration
+package com.camara.error
 
-import io.smallrye.config.ConfigMapping
-import java.util.Optional
-
-@ConfigMapping(prefix = "camara.notifications")
-@JvmDefaultWithCompatibility
-interface CamaraQoDConfiguration {
-    fun baseUrl(): String
-    fun odiSuffix(): Optional<String>
-}
-
-
+class DurationOutOfBoundException(
+    val err: String,
+    override val message: String,
+) : RuntimeException(message)
