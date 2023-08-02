@@ -1,7 +1,11 @@
 {
-  "duration": 300,
-  "ueAddr": "172.20.120.105",
-  "asAddr": "172.20.120.84",
+  "duration": 600,
+  "ueId": {
+    "ipv4addr": "172.20.120.105"
+  },
+  "asId": {
+    "ipv4addr": "172.20.120.84"
+  },
   "uePorts": {
     "ports": [
       50984
@@ -12,9 +16,6 @@
       10000
     ]
   },
-  "protocolIn": "UDP",
-  "protocolOut": "UDP",
-  "qos": "QOS_M",
-  "notificationUri": "https://webhook.site/c1ae90f8-b7b6-4185-a848-2d1f63a08ff7",
-  "notificationAuthToken": "c8974e592c2fa383d4a3960714"
+  "qosProfileId": "c96c6152-d400-4b84-9b1f-aed6c8ce4a15",
+  "notificationUri": "https://webhook.site/d75d7a7f-577a-4136-8028-31dc22f4ee9e"
 }

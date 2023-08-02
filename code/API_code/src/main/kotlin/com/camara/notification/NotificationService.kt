@@ -13,26 +13,28 @@
 package com.camara.notification
 
 import com.camara.api.SessionNotificationsCallbackApi
-import com.camara.redis.RedisCacheClient
+import com.camara.redis.SessionCacheClient
 import com.camara.scef.model.NotificationData
+import jakarta.enterprise.context.ApplicationScoped
 import org.eclipse.microprofile.rest.client.RestClientBuilder
 import java.util.UUID
-import javax.enterprise.context.ApplicationScoped
 
 @ApplicationScoped
 class NotificationService(
-    val redis: RedisCacheClient,
+    val redis: SessionCacheClient,
     val mapper: NotificationMapper,
 ) {
-    fun notify(notification: NotificationData, id: UUID) {
+    fun notify(notification: NotificationData, id: String) {
+        // Because original UUID was prefixed by "X-OAPI-Application-Id:"
+        val uuid = UUID.fromString(id.substringAfter(":"))
         redis.readEntry(id).subscribe().with {
-            it?.sessionInfo?.notificationUri?.let { uri ->
-                //Todo manage notificationAuthToken
+            it?.sessionInfo?.webhook?.notificationUrl?.let { uri ->
+                // Todo manage notificationAuthToken
                 RestClientBuilder
                     .newBuilder()
                     .baseUri(uri)
                     .build(SessionNotificationsCallbackApi::class.java)
-                    .postNotification(mapper.mapToNotification(notification, id))
+                    .postNotification(mapper.mapToNotification(notification, uuid))
             }
         }
     }

@@ -13,6 +13,9 @@
 package com.camara.session
 
 import com.camara.model.SessionInfo
-import java.util.UUID
 
-data class SessionCache(val sessionInfoId: UUID, val asSessionId: String, val sessionInfo: SessionInfo)
+data class SessionCache(
+    val sessionInfoId: String,
+    val asSessionId: String,
+    val sessionInfo: SessionInfo,
+)

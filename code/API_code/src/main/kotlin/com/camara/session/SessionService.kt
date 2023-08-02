@@ -12,56 +12,121 @@
 */
 package com.camara.session
 
+import com.camara.error.DurationOutOfBoundException
+import com.camara.error.InternalServerError
+import com.camara.error.UnknownProfileException
 import com.camara.model.CreateSession
 import com.camara.model.SessionInfo
-import com.camara.redis.RedisCacheClient
+import com.camara.model.TimeUnitEnum
+import com.camara.profile.ProfileCache
+import com.camara.redis.ProfileCacheClient
+import com.camara.redis.SessionCacheClient
 import com.camara.scef.ScefClient
 import com.camara.scef.id
 import io.smallrye.mutiny.Uni
+import jakarta.enterprise.context.ApplicationScoped
+import jakarta.ws.rs.NotFoundException
+import jakarta.ws.rs.WebApplicationException
 import org.eclipse.microprofile.rest.client.inject.RestClient
+import org.jboss.resteasy.reactive.client.api.WebClientApplicationException
 import java.time.Instant
 import java.util.UUID
-import javax.enterprise.context.ApplicationScoped
 
 @ApplicationScoped
 class SessionService(
     @RestClient val client: ScefClient,
     val sessionMapper: SessionMapper,
-    val redisCacheClient: RedisCacheClient,
+    val sessionCacheClient: SessionCacheClient,
+    val profileCacheClient: ProfileCacheClient,
 ) {
+    private fun checkDuration(session: SessionInfo, profileCache: ProfileCache) {
+        var duration = profileCache.qosProfile.minDuration
+        val min = duration.value * unitToSeconds.getOrDefault(duration.unit, 1)
+        duration = profileCache.qosProfile.maxDuration
+        val max = duration.value * unitToSeconds.getOrDefault(duration.unit, 1)
 
-    fun createSession(createSession: CreateSession): Uni<SessionInfo> {
+        if (session.duration < min || session.duration > max) {
+            throw DurationOutOfBoundException(
+                "INVALID_ARGUMENT",
+                "Duration should be between $min and $max for this profile"
+            )
+        }
+    }
+
+    fun createSession(createSession: CreateSession, applicationId: String): Uni<SessionInfo> {
         val startedAt = Instant.now().epochSecond
         val session = SessionInfo()
-            .id(UUID.randomUUID())
-            .asId(createSession.asId)
-            .asPorts(createSession.asPorts)
+            .sessionId(UUID.randomUUID())
+            .applicationServer(createSession.applicationServer)
+            .applicationServerPorts(createSession.applicationServerPorts)
             .duration(createSession.duration)
             .startedAt(startedAt)
             .expiresAt(startedAt + createSession.duration)
-            .notificationAuthToken(createSession.notificationAuthToken)
-            .notificationUri(createSession.notificationUri)
-            .qos(createSession.qos)
-            .ueId(createSession.ueId)
-            .uePorts(createSession.uePorts)
+            .webhook(createSession.webhook)
+            .qosProfile(createSession.qosProfile)
+            .device(createSession.device)
+            .devicePorts(createSession.devicePorts)
 
-        return client.scsAsIdSubscriptionsPost(
-            sessionMapper.mapSessionInfoToAsSessionWithQoSSubscription(session)
-        ).map {
-            redisCacheClient.addEntry(SessionCache(session.id, it.id()!!, session))
-            session
+        return profileCacheClient.readEntry(createSession.qosProfile).flatMap { profileCache ->
+            checkDuration(session, profileCache)
+            client.scsAsIdSubscriptionsPost(
+                sessionMapper.mapSessionInfoToAsSessionWithQoSSubscription(
+                    session,
+                    profileCache
+                )
+            ).flatMap {
+                sessionCacheClient.addEntry(
+                    SessionCache("$applicationId:${session.sessionId}", it.id()!!, session)
+                ).map { session }
+            }.onFailure().recoverWithUni { err ->
+                when (err) {
+                    is WebClientApplicationException, is WebApplicationException -> Uni.createFrom().failure(err)
+
+                    is NoSuchElementException -> Uni.createFrom().failure(
+                        UnknownProfileException(
+                            "INVALID_PROFILE",
+                            err.message ?: "QoS Profile ${createSession.qosProfile} was not found"
+                        )
+                    )
+
+                    else -> Uni.createFrom().failure(
+                        WebApplicationException(
+                            InternalServerError("500", "Unsupported error ${err.message}")
+                        )
+                    )
+                }
+            }
         }
-
     }
 
-    fun deleteSession(sessionId: UUID) {
-        redisCacheClient.removeEntry(sessionId)
+    fun deleteSession(sessionId: UUID, applicationId: String): Uni<Void> {
+        // We remove entry in cache after session was deleted on scef side
+        val cacheSessionId = "$applicationId:$sessionId"
+        return sessionCacheClient.readEntry(cacheSessionId).map { sessionCache ->
+            client.scsAsIdSubscriptionsDelete(sessionCache.asSessionId)
+        }.flatMap {
+            sessionCacheClient.removeEntry(cacheSessionId)
+                .flatMap { Uni.createFrom().voidItem() }
+                .onFailure()
+                .transform { InternalServerError("FAILED_TO_REMOVE_SESSION", "Unable to delete session") }
+        }
     }
 
-
-    fun getSession(sessionId: UUID): Uni<SessionInfo?> {
-        return redisCacheClient.readEntry(sessionId).map {
-            it?.sessionInfo
+    fun getSession(sessionId: UUID, applicationId: String): Uni<SessionInfo?> =
+        sessionCacheClient.readEntry("$applicationId:$sessionId").flatMap { sessionCache ->
+            if (sessionCache != null) {
+                Uni.createFrom().item(sessionCache.sessionInfo)
+            } else {
+                Uni.createFrom().failure(NotFoundException("Session with id : $sessionId was not found"))
+            }
         }
+
+    companion object {
+        val unitToSeconds = mapOf(
+            TimeUnitEnum.SECONDS to 1,
+            TimeUnitEnum.MINUTES to 60,
+            TimeUnitEnum.HOURS to 3_600,
+            TimeUnitEnum.DAYS to 86_400
+        )
     }
 }

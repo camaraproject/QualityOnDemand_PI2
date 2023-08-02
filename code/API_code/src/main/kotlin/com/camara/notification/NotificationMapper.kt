@@ -13,41 +13,39 @@
 
 package com.camara.notification
 
-import com.camara.model.EventReport
-import com.camara.model.Notification
-import com.camara.model.QosStatus
-import com.camara.model.SessionEventType
+import com.camara.model.EventDetail
+import com.camara.model.EventQosStatus
+import com.camara.model.QosStatusChangedEvent
 import com.camara.scef.model.Event
 import com.camara.scef.model.NotificationData
+import jakarta.enterprise.context.ApplicationScoped
 import java.util.UUID
-import javax.enterprise.context.ApplicationScoped
-
 
 @ApplicationScoped
 class NotificationMapper {
 
-    fun mapToStatus(event: Event): QosStatus {
+    fun mapToStatus(event: Event): EventQosStatus {
         return when (event) {
-            Event.SESSION_TERMINATION -> QosStatus.UNAVAILABLE
-            Event.SUCCESSFUL_RESOURCES_ALLOCATION -> QosStatus.AVAILABLE
-            else -> QosStatus.REQUESTED
+            Event.SESSION_TERMINATION -> EventQosStatus.UNAVAILABLE
+            Event.SUCCESSFUL_RESOURCES_ALLOCATION -> EventQosStatus.AVAILABLE
+            else -> EventQosStatus.UNAVAILABLE
         }
     }
 
-    fun mapToNotification(data: NotificationData, id: UUID): Notification {
-        return Notification().apply {
-            sessionId = id
-            eventReports = data
-                .eventReports
-                .filter {
-                    it.event == Event.SUCCESSFUL_RESOURCES_ALLOCATION ||
-                            it.event == Event.SESSION_TERMINATION
-                }
-                .map {
-                    EventReport()
-                        .qosStatus(mapToStatus(it.event))
-                        .eventType(SessionEventType.QOS_STATUS_CHANGED)
-                }
+    fun mapToNotification(data: NotificationData, id: UUID): com.camara.model.Event {
+        return QosStatusChangedEvent().apply {
+            eventDetail = EventDetail().apply {
+                sessionId = id
+                qosStatus = data
+                    .eventReports
+                    .filter {
+                        it.event == Event.SUCCESSFUL_RESOURCES_ALLOCATION || it.event == Event.SESSION_TERMINATION
+                    }
+                    .map {
+                        mapToStatus(it.event)
+                    }
+                    .first()
+            }
         }
     }
 }

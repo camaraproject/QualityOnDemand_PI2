@@ -20,12 +20,7 @@ fun WireMockServer.stubForOauth() = this.stubFor(
     WireMock.post(WireMock.urlEqualTo("/oauth/v3/token"))
         .willReturn(
             WireMock.okJson(
-                "{\n" +
-                        "\"access_token\":\"mF_9.B5f-4.1JqM\",\n" +
-                        "\"token_type\":\"Bearer\",\n" +
-                        "\"expires_in\":3600,\n" +
-                        "\"refresh_token\":\"tGzv3JOkF0XG5Qx2TlKWIA\"\n" +
-                        "}".trimIndent()
+                "{\n\"access_token\":\"mF_9.B5f-4.1JqM\",\n\"token_type\":\"Bearer\",\n\"expires_in\":3600,\n\"refresh_token\":\"tGzv3JOkF0XG5Qx2TlKWIA\"\n${"}".trimIndent()}"
             )
         )
 )
