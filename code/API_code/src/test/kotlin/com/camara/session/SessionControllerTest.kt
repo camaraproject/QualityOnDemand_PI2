@@ -49,6 +49,8 @@ internal class SessionControllerTest {
             .contentType(ContentType.JSON)
             .header("X-OAPI-Application-Id", appId)
             .body(sessionToCreate)
+            .log()
+            .all()
             .`when`()
             .post("/sessions")
             .then()

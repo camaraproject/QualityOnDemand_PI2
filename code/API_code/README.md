@@ -11,6 +11,10 @@ in dev mode, or you must provide your redis address in configuration.
 
 ## Configuration
 
+No additional configuration needed if docker is running.
+Redis will be populated automatically with 5 profiles you will find in resources/import.redis.
+Three are ACTIVE (low, middle, high) and can be used to create session, two other are INACTIVE.
+
 ### Build time
 
 The Quarkus application configuration is located in `src/main/resources/application.properties`.
@@ -64,5 +68,13 @@ docker run -i --rm -p 8080:8080 camara/qod
 ## Play with swagger-ui
 
 When application is running, you can play with [swagger-ui](http://localhost:8080/qod/v1/q/swagger-ui) to test the
-service. 
+service.
+
+### Body sample
+
+A sample body for creating a session can be found in test/resources/create-session-sample.json
+
+You can generate other sample using controller tests by adding .log().all() before when clause (see it in action in
+SessionControllerTest).
+
 
