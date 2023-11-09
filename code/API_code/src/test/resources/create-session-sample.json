@@ -1,0 +1,26 @@
+{
+  "duration": 60,
+  "device": {
+    "ipv4Address": {
+      "publicAddress": "192.168.0.2"
+    }
+  },
+  "applicationServer": {
+    "ipv4Address": "192.168.0.1"
+  },
+  "devicePorts": {
+    "ports": [
+      5022
+    ]
+  },
+  "applicationServerPorts": {
+    "ports": [
+      5010
+    ]
+  },
+  "qosProfile": "low",
+  "webhook": {
+    "notificationUrl": "http://localhost:8888",
+    "notificationAuthToken": "TOKEN_1234567891234567890"
+  }
+}
